@@ -16,17 +16,4 @@ add_subdirectory(libs)
 
 add_subdirectory(flash_n_debug)
 
-add_custom_command(TARGET ${PROJECT_NAME}
-    POST_BUILD
-    COMMAND cp -u ${CMAKE_BINARY_DIR}/${PROJECT_NAME} ${CMAKE_BINARY_DIR}/firmware
-)
-
-
-#================================================================================
-set(PROG stlink-v2)
-string(CONCAT PROG_TARGET ${LOCM3_DEVICE_SERIE} x)
-
-include(oocd_flash_script)
-
-install(CODE ${OOCD_FLASH_SCRIPT})
-
+add_subdirectory(doc)
