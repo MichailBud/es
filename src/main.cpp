@@ -2,6 +2,8 @@
 #include <libopencm3/stm32/gpio.h>  // general purpose input output (общего назначения)
 #include  <libopencm3/stm32/timer.h>
 
+#include  <libopencm3/cm3/nvic.h>
+
 
 // class Rcc{
 // public:
@@ -20,12 +22,13 @@ int main() {
     timer_set_prescaller(TIM6, 8000-1); // Установка предделителя
     timer_set_period(TIM6, 1000-1); // Установка предела счёта
     timer_enable_counter(TIM6); // Активацтя таймера
-    
-    while (true) {
-        if (timer_get_counter(TIM6) < 500) {
-            gpio_set(GPIOD, GPIO15);
-        } else {
-            gpio_clear(GPIOD, GPIO15);
-        }
-    }
+
+    timer_enable_irq(TIM6, TIM_DIER_UIE); // Разрешает внутри МК отправлять сигнал
+
+    nvic_enable_irq(NVIC_TIM6_DAC_IRQ);
+}
+
+void tim6_dac_isr (void){
+    timer_clear_flag(TIM6, TIM_SR_UIF);
+    gpio_toggle(GPIOD, GPIO15);
 }
