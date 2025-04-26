@@ -26,8 +26,6 @@ void timer_enable(rcc_periph_clken rcc_tim, unsigned int tim, int presc, int per
     timer_enable_counter(tim); // Активация таймера
 }
 
-bool flag=true;
-
 int main() {
 
     timer_enable(RCC_TIM5, TIM5, rcc_get_timer_clk_freq(TIM5)/timer5_clk_freq_hz - 1, 1000);   // Активация и настройка 4 таймера
@@ -39,6 +37,7 @@ int main() {
     timer_ic_set_input(TIM5, TIM_IC1, TIM_IC_IN_TI1); // Функция устанавливает с какого входа таймера будет считываться сигнал для захвата счётчика.
     // timer_ic_set_filter();
     timer_ic_set_polarity(TIM5, TIM_IC1, TIM_IC_RISING);
+    timer_ic_enable(TIM5, TIM_IC1);
 
     timer_enable_irq(TIM5, TIM_DIER_CC1IE); // Разрешает прерывание по обновлению
     nvic_enable_irq(NVIC_TIM5_IRQ); // Разрешаем прерывание TIM4 в NVIC
@@ -47,5 +46,6 @@ int main() {
 }
 
 void tim5_isr(void){
-    
+
+    timer_clear_flag(TIM5, TIM_SR_CC1IF);
 }
