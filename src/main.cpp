@@ -8,15 +8,8 @@
 
 Circular_buffer b; 
 
-constexpr uint8_t SIZE = 8;
-
 
 int main() {
-
-    volatile uint8_t buffer[SIZE];
-    volatile uint8_t wr_idx = 0;
-    volatile uint8_t rd_idx = 0;
-    bool buf_full{0}; // Полный ли буфер
 
     rcc_periph_clock_enable(RCC_GPIOA); // Включаем группу портов ввода вывода A
     gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3); // Активируем 2 и 3 вывод в режиме альтернативной функции
@@ -37,30 +30,13 @@ int main() {
 
     while (true){
         if (usart_get_flag(USART2, USART_SR_RXNE)){ // Условие Read data register not empty
-
+            b.put(static_cast<uint8_t>(usart_recv(USART2)));
             // send blocking --- если предыдущий байт ещё не передан - не отправлять
             // recv(receive) без blocking, потому что мы знаем заранее что данные пришли. blocking ждёт данные
-            uint16_t data = usart_recv(USART2); 
-            if (!buf_full){
-                buffer[wr_idx] = static_cast<uint8_t>(data);
-
-                wr_idx++;
-                wr_idx %= SIZE;
-
-                if (wr_idx == rd_idx) {
-                    buf_full = true;
-                }
-            }
-
-            // if (wr_idx == SIZE){
-            //     for (int i =0; i < SIZE; ++i){
-            //         usart_send_blocking(USART2, buffer[i]);
-            //     }
-            //     wr_idx = 0;
-            // }
-
         }
-        // for (volatile uint32_t i = 0; i < 50000; ++i);
+        if (!b.empty()){
+                usart_send_blocking(USART2, b.get());
+        }
     }
 }
 
