@@ -1,8 +1,12 @@
+#include "circular_buffer.hpp"
+
 #include <libopencm3/stm32/rcc.h> // reset and clock control
 #include <libopencm3/stm32/gpio.h>  // general purpose input output (общего назначения)
 #include  <libopencm3/stm32/usart.h>
 
 #include  <libopencm3/cm3/nvic.h>
+
+Circular_buffer b; 
 
 constexpr uint8_t SIZE = 8;
 
@@ -37,15 +41,23 @@ int main() {
             // send blocking --- если предыдущий байт ещё не передан - не отправлять
             // recv(receive) без blocking, потому что мы знаем заранее что данные пришли. blocking ждёт данные
             uint16_t data = usart_recv(USART2); 
-            buffer[wr_idx] = static_cast<uint8_t>(data);
+            if (!buf_full){
+                buffer[wr_idx] = static_cast<uint8_t>(data);
 
-            wr_idx++;
-            if (wr_idx == SIZE){
-                for (int i =0; i < SIZE; ++i){
-                    usart_send_blocking(USART2, buffer[i]);
+                wr_idx++;
+                wr_idx %= SIZE;
+
+                if (wr_idx == rd_idx) {
+                    buf_full = true;
                 }
-                wr_idx = 0;
             }
+
+            // if (wr_idx == SIZE){
+            //     for (int i =0; i < SIZE; ++i){
+            //         usart_send_blocking(USART2, buffer[i]);
+            //     }
+            //     wr_idx = 0;
+            // }
 
         }
         // for (volatile uint32_t i = 0; i < 50000; ++i);
