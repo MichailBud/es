@@ -3,8 +3,8 @@
 void Circular_buffer::put(uint8_t d) {
     buf[wr_idx] = d;
     wr_idx ++;
-    wr_idx %= 8;
-    if(wr_idx ==rd_idx) full_ = true;
+    wr_idx %= SIZE;
+    if(wr_idx == rd_idx) full_ = true;
 };
 
 uint8_t Circular_buffer::get() {

@@ -6,10 +6,15 @@
 
 #include  <libopencm3/cm3/nvic.h>
 
-Circular_buffer b; 
+
 
 
 int main() {
+    Circular_buffer b; 
+
+    rcc_periph_clock_enable(RCC_GPIOD); // Включаем 15 вывод (светодиод)
+    gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO15); 
+
 
     rcc_periph_clock_enable(RCC_GPIOA); // Включаем группу портов ввода вывода A
     gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3); // Активируем 2 и 3 вывод в режиме альтернативной функции
@@ -26,17 +31,25 @@ int main() {
     usart_set_mode(USART2, USART_MODE_TX_RX); // Режим приёмопередатчика
     usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 
+    usart_enable_rx_interrupt(USART2); // Включаем прерывание по приёму
+    nvic_enable_irq(NVIC_USART2_IRQ); // Вкл. прерывание
+
     usart_enable(USART2);
 
     while (true){
-        if (usart_get_flag(USART2, USART_SR_RXNE)){ // Условие Read data register not empty
+        if (usart_get_flag(USART2, USART_SR_RXNE) and !b.full()){ // Условие Read data register not empty
             b.put(static_cast<uint8_t>(usart_recv(USART2)));
             // send blocking --- если предыдущий байт ещё не передан - не отправлять
             // recv(receive) без blocking, потому что мы знаем заранее что данные пришли. blocking ждёт данные
         }
+
         if (!b.empty()){
-                usart_send_blocking(USART2, b.get());
+            usart_send_blocking(USART2, b.get());
         }
     }
 }
 
+void usart2_isr (void){
+    
+    gpio_toggle(GPIOD, GPIO15); // Переключение светодиода по прерыванию
+}

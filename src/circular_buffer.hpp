@@ -14,7 +14,7 @@ public:
 	Circular_buffer();        // Circular_buffer b1;
 
 private:
-	uint8_t buf[32];
+	uint8_t buf[SIZE];
 	uint8_t wr_idx;
 	uint8_t rd_idx;
 	bool full_;
