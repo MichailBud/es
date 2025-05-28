@@ -6,11 +6,11 @@
 
 #include  <libopencm3/cm3/nvic.h>
 
-
+Circular_buffer b;
 
 
 int main() {
-    Circular_buffer b; 
+    
 
     rcc_periph_clock_enable(RCC_GPIOD); // Включаем 15 вывод (светодиод)
     gpio_mode_setup(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO15); 
@@ -37,11 +37,7 @@ int main() {
     usart_enable(USART2);
 
     while (true){
-        if (usart_get_flag(USART2, USART_SR_RXNE) and !b.full()){ // Условие Read data register not empty
-            b.put(static_cast<uint8_t>(usart_recv(USART2)));
-            // send blocking --- если предыдущий байт ещё не передан - не отправлять
-            // recv(receive) без blocking, потому что мы знаем заранее что данные пришли. blocking ждёт данные
-        }
+        
 
         if (!b.empty()){
             usart_send_blocking(USART2, b.get());
@@ -50,6 +46,10 @@ int main() {
 }
 
 void usart2_isr (void){
-    
     gpio_toggle(GPIOD, GPIO15); // Переключение светодиода по прерыванию
+    if (usart_get_flag(USART2, USART_SR_RXNE) and !b.full()){ // Условие Read data register not empty
+        b.put(static_cast<uint8_t>(usart_recv(USART2)));
+        // send blocking --- если предыдущий байт ещё не передан - не отправлять
+        // recv(receive) без blocking, потому что мы знаем заранее что данные пришли. blocking ждёт данные
+    }
 }
